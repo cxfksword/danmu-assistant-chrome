@@ -35,32 +35,27 @@
               >
             </el-checkbox-group>
           </el-form-item>
-          <el-form-item>
-            <label class="el-form-item__label" slot="label"
-              >2/ 弹幕偏移(秒)
-              <el-tooltip class="item" effect="dark" placement="top">
-                <template #content>
-                  正数延后, 负数提前, 用于跳过一些多余的片头时间，如：<br />
-                  3 表示弹幕延后3秒显示<br />
-                  -3 表示弹幕提前3秒显示<br />
-                </template>
-                <i class="el-icon-question"></i>
-              </el-tooltip>
-            </label>
-
-            <el-input
-              v-model="form.offset"
-              placeholder="正数延后, 负数提前"
-            ></el-input>
+          <el-form-item label="2/ 弹幕偏移(秒)">
+            <el-tooltip class="item" effect="dark" placement="top">
+              <template #content>
+                正数延后, 负数提前, 用于跳过一些多余的片头时间，如：<br />
+                &nbsp;3 表示弹幕延后3秒显示<br />
+                -3 表示弹幕提前3秒显示<br />
+              </template>
+              <el-input
+                v-model="form.offset"
+                placeholder="正数延后, 负数提前"
+              ></el-input>
+            </el-tooltip>
           </el-form-item>
-          <el-form-item>
-            <label class="el-form-item__label" slot="label"
-              >3/ 合并字幕
-              <el-tooltip class="item" effect="dark" placement="top">
-                <template #content> 需保持和选中的字幕数量一致 </template>
-                <i class="el-icon-question"></i>
-              </el-tooltip>
-            </label>
+          <el-form-item label="3/ 合并字幕">
+            <el-tooltip class="item" effect="dark" placement="top">
+              <template #content> 需保持和选中的字幕数量一致 </template>
+              <div class="choose_ass" v-on:click="chooseAss">
+                {{ chooseAssTips }}
+              </div>
+            </el-tooltip>
+
             <input
               id="ass"
               type="file"
@@ -68,27 +63,17 @@
               v-show="false"
               multiple
             />
-            <div class="choose_ass" v-on:click="chooseAss">
-              {{ chooseAssTips }}
-            </div>
           </el-form-item>
-          <el-form-item>
-            <label class="el-form-item__label" slot="label"
-              >4/ 文件重命名
-              <el-tooltip class="item" effect="dark" placement="top">
-                <template #content>
-                  支持的替换变量：<br />
-                  {title}：视频标题<br />
-                  {ep_title}：每集标题<br />
-                  {number}： 集数<br />
-                </template>
-                <i class="el-icon-question"></i>
-              </el-tooltip>
-            </label>
-            <el-input
-              v-model="form.rename"
-              placeholder="可使用替换变量"
-            ></el-input>
+          <el-form-item label="4/ 文件重命名">
+            <el-tooltip class="item" effect="dark" placement="top">
+              <template #content>
+                {title}:视频标题 {ep_title}:每集标题 {number}:集数<br />
+              </template>
+              <el-input
+                v-model="form.rename"
+                placeholder="支持的替换变量："
+              ></el-input>
+            </el-tooltip>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submit()" icon="el-icon-download">
@@ -243,7 +228,7 @@ export default {
                 showTitle: epJson.title,
               });
               console.warn($this.form.epList);
-              $this.form.danmu = epJson.cid;
+              $this.form.danmu.push(epJson.cid);
             }
 
             let match = /"h1Title":"(.+?)",/.exec(res.responseText);

@@ -1,10 +1,11 @@
 {
   "name": "danmu-assistant-chrome",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "publish": "vite build && cd dist && npx crx pack --zip-output ../release/danmu-assistant-chrome.zip && npx crx pack -o ../release/danmu-assistant-chrome.crx"
   },
   "dependencies": {
     "element-plus": "1.0.2-beta.70",
@@ -14,8 +15,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.3.0",
     "@vue/compiler-sfc": "^3.0.5",
+    "crx": "^5.0.1",
     "rollup-plugin-copy": "^3.4.0",
-    "vite": "^2.4.4",
-    "vite-plugin-chrome-extension": "0.0.7"
+    "vite": "^2.4.4"
   }
 }
