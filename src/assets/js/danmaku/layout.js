@@ -189,12 +189,12 @@
             start: {
               x: options.resolutionX + line.width / 2,
               y: top + line.height,
-              time: time + options.offset,
+              time: time + parseFloat(options.offset),
             },
             end: {
               x: -line.width / 2,
               y: top + line.height,
-              time: options.rtlDuration + time + options.offset,
+              time: options.rtlDuration + time + parseFloat(options.offset),
             },
           };
         } else if (['TOP', 'BOTTOM'].includes(line.mode)) {

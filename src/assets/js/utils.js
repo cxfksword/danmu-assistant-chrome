@@ -143,4 +143,8 @@ utils.extractAss = function(content) {
     return extractContent;
 }
 
+utils.sleep = function (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 export default utils;

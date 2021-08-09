@@ -43,7 +43,7 @@
                 -3 表示弹幕提前3秒显示<br />
               </template>
               <el-input
-                v-model="form.offset"
+                v-model.number="form.offset"
                 placeholder="正数延后, 负数提前"
               ></el-input>
             </el-tooltip>
@@ -76,7 +76,12 @@
             </el-tooltip>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="submit()" icon="el-icon-download">
+            <el-button
+              type="primary"
+              @click="submit()"
+              icon="el-icon-download"
+              :loading="loading"
+            >
               下载/合并弹幕
             </el-button>
           </el-form-item>
@@ -115,6 +120,7 @@ export default {
       chooseAssDefaultTips: "点击此处选择字幕文件，支持ass/srt",
       chooseAssTips: "",
       pageUrl: "",
+      loading: false,
     };
   },
   created() {
@@ -136,14 +142,12 @@ export default {
       let $this = this;
 
       utils.getOptions("settings", function (settings) {
-        console.log(settings);
         if (settings && settings.textOpacity) {
           $this.settings.textOpacity = settings.textOpacity;
         }
       });
 
       utils.getPageOptions("page-settings", url, function (pageSettings) {
-        console.log(pageSettings);
         if (pageSettings && pageSettings.offset) {
           $this.form.offset = pageSettings.offset;
         }
@@ -187,7 +191,6 @@ export default {
           `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`,
           {
             success: function (res) {
-              console.log(res.responseText);
               let videoJson = JSON.parse(res.responseText);
               if (videoJson && videoJson.data) {
                 for (let i = 0; i < videoJson.data.pages.length; i++) {
@@ -214,20 +217,27 @@ export default {
       if (/\/bangumi\/play\/ep\d+/.test(url)) {
         utils.ajax(url, {
           success: function (res) {
+            let epList = new RegExp(/"epList":(\[{".+}]),"epInfo"/).exec(
+              res.responseText
+            );
+            if (!!epList && epList.length) {
+              let epListJson = JSON.parse(epList[1]);
+              for (let i = 0; i < epListJson.length; i++) {
+                const epJson = epListJson[i];
+                $this.form.epList.push({
+                  number: utils.paddingZero(i + 1),
+                  cid: epJson.cid,
+                  title: epJson.title,
+                  showTitle: epJson.titleFormat,
+                });
+              }
+            }
+
             let epInfo = new RegExp(/"epInfo":(\{.+?\}),"sections"/).exec(
               res.responseText
             );
-            console.warn(epInfo);
             if (!!epInfo && epInfo.length) {
               let epJson = JSON.parse(epInfo[1]);
-              console.warn(epJson);
-              $this.form.epList.push({
-                number: utils.paddingZero(1),
-                cid: epJson.cid,
-                title: epJson.title,
-                showTitle: epJson.title,
-              });
-              console.warn($this.form.epList);
               $this.form.danmu.push(epJson.cid);
             }
 
@@ -246,17 +256,15 @@ export default {
             let epList = new RegExp(/"epList":(\[{".+}]),"epInfo"/).exec(
               res.responseText
             );
-            console.warn(epList);
             if (!!epList && epList.length) {
               let epListJson = JSON.parse(epList[1]);
-              console.warn(epListJson);
               for (let i = 0; i < epListJson.length; i++) {
                 const epJson = epListJson[i];
                 $this.form.epList.push({
                   number: utils.paddingZero(i + 1),
                   cid: epJson.cid,
                   title: epJson.title,
-                  showTitle: epJson.title,
+                  showTitle: epJson.titleFormat,
                 });
                 if (i == 0) {
                   $this.form.danmu.push(epJson.cid);
@@ -272,22 +280,27 @@ export default {
         });
       }
     },
-    fetchDanmuXml: function (cid, done) {
+    fetchDanmuXml: function (cid) {
       let $this = this;
 
-      let url = "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid;
-      utils.ajax(url, {
-        success: function (res) {
-          const { id, danmaku } = window.danmaku.parser.bilibili_xml(
-            res.responseText
-          );
+      return new Promise((resolve, reject) => {
+        let url = "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid;
+        utils.ajax(url, {
+          success: function (res) {
+            const { id, danmaku } = window.danmaku.parser.bilibili_xml(
+              res.responseText
+            );
 
-          done({
-            id: `bilibili-${cid}`,
-            meta: { url },
-            content: danmaku,
-          });
-        },
+            resolve({
+              id: `bilibili-${cid}`,
+              meta: { url },
+              content: danmaku,
+            });
+          },
+          error: function (e) {
+            reject(e);
+          },
+        });
       });
     },
     chooseAss: function () {
@@ -295,7 +308,6 @@ export default {
     },
     selectFile: function (e) {
       let $this = this;
-      console.log(e.target.files);
       let file = e.target.value;
 
       let countTips = "";
@@ -345,6 +357,7 @@ export default {
     },
     submit: async function () {
       let $this = this;
+      $this.loading = true;
 
       // 保存设置
       $this.saveSettings($this.pageUrl);
@@ -355,45 +368,48 @@ export default {
       let files = document.querySelector("#ass").files;
       for (let i = 0; i < epList.length; i++) {
         let epInfo = epList[i];
-        console.log(epInfo.title);
         let file = files && files.length > i ? files[i] : null;
-        console.log(file);
 
         let downloadFileName = $this.getDownloadName(epInfo);
-        $this.fetchDanmuXml(epInfo.cid, async function (danmaku) {
-          danmaku.layout = await window.danmaku.layout(
-            danmaku.content,
-            options
-          );
-          console.log(danmaku);
-          let content = window.danmaku.ass(danmaku, options);
-          console.log(content);
-          // 合并ass/srt
-          if (file) {
-            let reader = new FileReader();
-            reader.onload = function (e) {
-              let mergeAss = "";
-              if (file.name.toLowerCase().endsWith(".srt")) {
-                mergeAss = window.danmaku.srt(e.target.result);
-              } else if (file.name.toLowerCase().endsWith(".ass")) {
-                mergeAss = utils.extractAss(e.target.result);
-              }
-              content = content + "\r\n\r\n\r\n" + mergeAss;
+        let danmaku = await $this.fetchDanmuXml(epInfo.cid);
 
-              var blob = new window.Blob([content], {
-                type: "text/plain;charset=utf-8",
-              });
-              saveAs(blob, `${downloadFileName}.danmu.ass`);
-            };
-            reader.readAsText(file);
-          } else {
+        danmaku.layout = await window.danmaku.layout(danmaku.content, options);
+        let content = window.danmaku.ass(danmaku, options);
+        // 合并ass/srt
+        if (file) {
+          let reader = new FileReader();
+          reader.onload = function (e) {
+            let mergeAss = "";
+            if (file.name.toLowerCase().endsWith(".srt")) {
+              mergeAss = window.danmaku.srt(e.target.result);
+            } else if (file.name.toLowerCase().endsWith(".ass")) {
+              mergeAss = utils.extractAss(e.target.result);
+            }
+            content = content + "\r\n\r\n\r\n" + mergeAss;
+
             var blob = new window.Blob([content], {
               type: "text/plain;charset=utf-8",
             });
             saveAs(blob, `${downloadFileName}.danmu.ass`);
-          }
-        });
+            console.log(
+              `${epInfo.number}.${epInfo.title}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
+            );
+          };
+          reader.readAsText(file);
+        } else {
+          var blob = new window.Blob([content], {
+            type: "text/plain;charset=utf-8",
+          });
+          saveAs(blob, `${downloadFileName}.danmu.ass`);
+          console.log(
+            `${epInfo.number}.${epInfo.title} -> ${downloadFileName}.danmu.ass已处理完成`
+          );
+        }
+
+        await utils.sleep(1000);
       }
+
+      $this.loading = false;
     },
   },
 };
