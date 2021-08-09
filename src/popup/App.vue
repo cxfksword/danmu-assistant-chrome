@@ -392,7 +392,7 @@ export default {
             });
             saveAs(blob, `${downloadFileName}.danmu.ass`);
             console.log(
-              `${epInfo.number}.${epInfo.title}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
+              `${epInfo.number}.${epInfo.showTitle}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
             );
           };
           reader.readAsText(file);
@@ -402,7 +402,7 @@ export default {
           });
           saveAs(blob, `${downloadFileName}.danmu.ass`);
           console.log(
-            `${epInfo.number}.${epInfo.title} -> ${downloadFileName}.danmu.ass已处理完成`
+            `${epInfo.number}.${epInfo.showTitle} -> ${downloadFileName}.danmu.ass已处理完成`
           );
         }
 
