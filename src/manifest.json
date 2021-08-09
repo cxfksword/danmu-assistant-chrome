@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "bilibili弹幕下载助手",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "下载B站的弹幕，合并电影字幕，并输出ass字幕文件",
     "permissions": [
         "activeTab",

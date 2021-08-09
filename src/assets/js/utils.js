@@ -128,19 +128,45 @@ utils.extractAss = function(content) {
         extractContent = match[0];
     }
 
+    let playResX = 560;
+    let PlayResY = 420;
     match = /PlayResX\:\s*?(\d+)/.exec(content);
     if (match && match.length > 0) {
-        let playResX = parseInt(match[1], 10);
-        let changeRes = playResX - 560;
-        let changeFontSize = changeRes > 0 ? Math.ceil(changeRes / 100) : Math.floor(changeRes / 100)
-
-        extractContent = extractContent.replace(/Style\:.*?,.*?,(\d+?),/gi, function(match, p1) {
-            let fontSize = parseInt(p1, 10) + changeFontSize;
-            return match.replace(`,${p1},`, `,${fontSize},`);
-        });
+        playResX = parseInt(match[1], 10);
+    }
+    match = /PlayResY\:\s*?(\d+)/.exec(content);
+    if (match && match.length > 0) {
+        PlayResY = parseInt(match[1], 10);
     }
 
-    return extractContent;
+   // let changeRes = playResX - 560;
+   // let changeFontSize = changeRes > 0 ? Math.ceil(changeRes / 100) : Math.floor(changeRes / 100)
+
+    let minFontSize =  25
+    let normalFontSize = 32;
+    let maxFontSize = 36;
+    let orgFontSize = 0;
+    extractContent = extractContent.replace(/Style\:.*?,.*?,(\d+?),/gi, function(match, p1) {
+        let fontSize = normalFontSize;
+        if (orgFontSize <= 0) {
+            orgFontSize = parseInt(p1, 10);
+        } else {
+           if (parseInt(p1, 10) > orgFontSize) {
+               fontSize  = maxFontSize;
+           } else if (parseInt(p1, 10) < orgFontSize) {
+               fontSize = minFontSize;
+           }
+        }
+        return match.replace(`,${p1},`, `,${fontSize},`);
+    });
+
+    return {
+        meta: {
+            playResX: playResX,
+            PlayResY: PlayResY
+        },
+        content : extractContent
+    };
 }
 
 utils.sleep = function (time) {

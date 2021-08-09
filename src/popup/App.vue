@@ -241,10 +241,7 @@ export default {
               $this.form.danmu.push(epJson.cid);
             }
 
-            let match = /"h1Title":"(.+?)",/.exec(res.responseText);
-            if (match && match.length > 1) {
-              $this.media.title = match[1];
-            }
+            $this.media.title = $this.parseTitle(res.responseText);
           },
         });
       }
@@ -272,10 +269,7 @@ export default {
               }
             }
 
-            let match = /"h1Title":"(.+?)",/.exec(res.responseText);
-            if (match && match.length > 1) {
-              $this.media.title = match[1];
-            }
+            $this.media.title = $this.parseTitle(res.responseText);
           },
         });
       }
@@ -303,6 +297,33 @@ export default {
         });
       });
     },
+    parseTitle: function (content) {
+      let match = /<a.+?title="(.+?)".+?class="media-title".*?>/.exec(content);
+      if (match && match.length > 1) {
+        return match[1];
+      }
+
+      match = /"h1Title":"(.+?)",/.exec(content);
+      if (match && match.length > 1) {
+        return match[1];
+      }
+
+      return "";
+    },
+    readFile: function (file) {
+      let $this = this;
+
+      return new Promise((resolve, reject) => {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+          resolve(e.target.result);
+        };
+        reader.onerror = function (e) {
+          reject(e);
+        };
+        reader.readAsText(file);
+      });
+    },
     chooseAss: function () {
       document.querySelector("#ass").click();
     },
@@ -317,8 +338,13 @@ export default {
         countTips = ` (${e.target.files.length})`;
         endTips =
           "..." + e.target.files[e.target.files.length - 1].name.substr(-10);
+
+        $this.chooseAssTips =
+          file.replace(/.*[\/\\]/, "").substr(0, 20) + endTips + countTips;
+      } else {
+        $this.chooseAssTips = file.replace(/.*[\/\\]/, "");
       }
-      $this.chooseAssTips = file.replace(/.*[\/\\]/, "") + endTips + countTips;
+
       $this.form.ass = e.target.value;
     },
     toggleSettings: function () {
@@ -342,15 +368,16 @@ export default {
       return name
         .replace(/{title}/gi, $this.media.title)
         .replace(/{video_title}/gi, $this.media.title)
-        .replace(/{ep_title}/gi, epInfo.title)
+        .replace(/{ep_title}/gi, epInfo.showTitle)
         .replace(/{number}/gi, epInfo.number);
     },
-    async mergeOptions() {
+    async mergeOptions(customOptions) {
       let $this = this;
+      customOptions = customOptions || {};
 
       const [globalOptions] = await Promise.all([window.options.get()]);
 
-      let options = { ...globalOptions, ...$this.settings };
+      let options = { ...globalOptions, ...$this.settings, ...customOptions };
       options = { ...options, ...{ offset: $this.form.offset || 0.0 } };
       console.log(options);
       return options;
@@ -363,7 +390,7 @@ export default {
       $this.saveSettings($this.pageUrl);
 
       // 处理字幕
-      let options = await $this.mergeOptions();
+
       let epList = $this.getSelectedEpList();
       let files = document.querySelector("#ass").files;
       for (let i = 0; i < epList.length; i++) {
@@ -373,30 +400,41 @@ export default {
         let downloadFileName = $this.getDownloadName(epInfo);
         let danmaku = await $this.fetchDanmuXml(epInfo.cid);
 
-        danmaku.layout = await window.danmaku.layout(danmaku.content, options);
-        let content = window.danmaku.ass(danmaku, options);
         // 合并ass/srt
         if (file) {
-          let reader = new FileReader();
-          reader.onload = function (e) {
-            let mergeAss = "";
-            if (file.name.toLowerCase().endsWith(".srt")) {
-              mergeAss = window.danmaku.srt(e.target.result);
-            } else if (file.name.toLowerCase().endsWith(".ass")) {
-              mergeAss = utils.extractAss(e.target.result);
-            }
-            content = content + "\r\n\r\n\r\n" + mergeAss;
+          let fileContent = await $this.readFile(file);
 
-            var blob = new window.Blob([content], {
-              type: "text/plain;charset=utf-8",
-            });
-            saveAs(blob, `${downloadFileName}.danmu.ass`);
-            console.log(
-              `${epInfo.number}.${epInfo.showTitle}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
-            );
-          };
-          reader.readAsText(file);
+          let mergeAss = "";
+          if (file.name.toLowerCase().endsWith(".srt")) {
+            mergeAss = window.danmaku.srt(fileContent);
+          } else if (file.name.toLowerCase().endsWith(".ass")) {
+            let assInfo = utils.extractAss(fileContent);
+            mergeAss = assInfo.content;
+          }
+
+          let options = await $this.mergeOptions();
+          danmaku.layout = await window.danmaku.layout(
+            danmaku.content,
+            options
+          );
+          let content = window.danmaku.ass(danmaku, options);
+          content = content + "\r\n\r\n\r\n" + mergeAss;
+
+          var blob = new window.Blob([content], {
+            type: "text/plain;charset=utf-8",
+          });
+          saveAs(blob, `${downloadFileName}.danmu.ass`);
+          console.log(
+            `${epInfo.number}.${epInfo.showTitle}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
+          );
         } else {
+          let options = await $this.mergeOptions();
+          danmaku.layout = await window.danmaku.layout(
+            danmaku.content,
+            options
+          );
+          let content = window.danmaku.ass(danmaku, options);
+
           var blob = new window.Blob([content], {
             type: "text/plain;charset=utf-8",
           });
@@ -525,6 +563,8 @@ label {
   line-height: 3em;
   border: 1px dashed #ccc;
   border-radius: 5px;
+  overflow: hidden;
+  padding: 0 5px;
 }
 
 .reverse {
