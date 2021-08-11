@@ -27,6 +27,8 @@
       if (!danmaku) return false;
       if (!danmaku.text) return false;
       if (!danmaku.mode) return false;
+      if (danmaku.mode == 'BOTTOM') return false;  // 过滤底部弹幕
+      if (danmaku.bottom) return false;  // 过滤字幕池
       if (!danmaku.size) return false;
       if (danmaku.time < 0 || danmaku.time >= 360000) return false;
       return true;

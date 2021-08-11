@@ -39,11 +39,11 @@
     };
   
     const attributes = [
-      { name: 'resolutionX', type: 'number', min: 480, predef: 560 },
-      { name: 'resolutionY', type: 'number', min: 360, predef: 420 },
+      { name: 'resolutionX', type: 'number', min: 480, predef: 720 },
+      { name: 'resolutionY', type: 'number', min: 360, predef: 540 },
       { name: 'bottomReserved', type: 'number', min: 0, predef: 60 },
       { name: 'fontFamily', type: 'string', predef: predefFontFamily(), valid: font => window.font.valid(font) },
-      { name: 'fontSize', type: 'number', min: 0, predef: 1, step: 0.01 },
+      { name: 'fontSize', type: 'number', min: 0, predef: 0, step: 0.01 },
       { name: 'textSpace', type: 'number', min: 0, predef: 0 },
       { name: 'rtlDuration', type: 'number', min: 0.1, predef: 8, step: 0.1 },
       { name: 'fixDuration', type: 'number', min: 0.1, predef: 4, step: 0.1 },

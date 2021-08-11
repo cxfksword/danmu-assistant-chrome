@@ -171,12 +171,26 @@
       };
     };
 
+
+    const calFontSize = (line, options) => {
+      if (options.fontSize <= 1) {
+        return line.size;
+      }
+
+      let step = 5;
+      if (options.fontSize > 60) {
+        step = 10;
+      }
+      let normalFontSize = 25;
+      return Math.round((options.fontSize - normalFontSize) + line.size - step);
+    }
+
     const placeDanmaku = function (options) {
       const layers = options.maxOverlap;
       const normal = Array(layers).fill(null).map(x => rtlCanvas(options));
       const fixed = Array(layers).fill(null).map(x => fixedCanvas(options));
       return function (line) {
-        line.fontSize = Math.round(line.size * options.fontSize);
+        line.fontSize = calFontSize(line, options);
         line.height = line.fontSize;
         line.width = line.width || window.font.text(options.fontFamily, line.text, line.fontSize) || 1;
 

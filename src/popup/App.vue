@@ -67,11 +67,12 @@
           <el-form-item label="4/ 文件重命名">
             <el-tooltip class="item" effect="dark" placement="top">
               <template #content>
-                {title}:视频标题 {ep_title}:每集标题 {number}:集数<br />
+                {title}:视频标题 {ep_title}:每集标题 {number}:补零集数
+                {idx}:集数<br />
               </template>
               <el-input
                 v-model="form.rename"
-                placeholder="支持的替换变量："
+                placeholder="支持的替换变量"
               ></el-input>
             </el-tooltip>
           </el-form-item>
@@ -195,14 +196,16 @@ export default {
               if (videoJson && videoJson.data) {
                 for (let i = 0; i < videoJson.data.pages.length; i++) {
                   const el = videoJson.data.pages[i];
+                  const title = el.part || videoJson.data.tname;
                   $this.form.epList.push({
+                    idx: i + 1,
                     number: utils.paddingZero(i + 1),
                     cid: el.cid,
-                    title: el.part,
+                    title: title,
                     showTitle:
                       videoJson.data.pages.length > 1
-                        ? `P${i + 1} ${el.part}`
-                        : el.part,
+                        ? `P${i + 1} ${title}`
+                        : title,
                   });
                 }
                 $this.form.danmu.push($this.form.epList[p - 1].cid);
@@ -225,6 +228,7 @@ export default {
               for (let i = 0; i < epListJson.length; i++) {
                 const epJson = epListJson[i];
                 $this.form.epList.push({
+                  idx: i + 1,
                   number: utils.paddingZero(i + 1),
                   cid: epJson.cid,
                   title: epJson.title,
@@ -258,6 +262,7 @@ export default {
               for (let i = 0; i < epListJson.length; i++) {
                 const epJson = epListJson[i];
                 $this.form.epList.push({
+                  idx: i + 1,
                   number: utils.paddingZero(i + 1),
                   cid: epJson.cid,
                   title: epJson.title,
@@ -287,7 +292,10 @@ export default {
 
             resolve({
               id: `bilibili-${cid}`,
-              meta: { url },
+              meta: {
+                name: $this.media.title,
+                url: url,
+              },
               content: danmaku,
             });
           },
@@ -369,7 +377,12 @@ export default {
         .replace(/{title}/gi, $this.media.title)
         .replace(/{video_title}/gi, $this.media.title)
         .replace(/{ep_title}/gi, epInfo.showTitle)
-        .replace(/{number}/gi, epInfo.number);
+        .replace(/{idx}/gi, epInfo.idx)
+        .replace(/{-idx}/gi, epInfo.idx - 1)
+        .replace(/{--idx}/gi, epInfo.idx - 2)
+        .replace(/{number}/gi, epInfo.number)
+        .replace(/{-number}/gi, utils.paddingZero(epInfo.idx - 1))
+        .replace(/{--number}/gi, utils.paddingZero(epInfo.idx - 2));
     },
     async mergeOptions(customOptions) {
       let $this = this;
@@ -390,7 +403,6 @@ export default {
       $this.saveSettings($this.pageUrl);
 
       // 处理字幕
-
       let epList = $this.getSelectedEpList();
       let files = document.querySelector("#ass").files;
       for (let i = 0; i < epList.length; i++) {
@@ -405,14 +417,20 @@ export default {
           let fileContent = await $this.readFile(file);
 
           let mergeAss = "";
+          let mgergeOption = {};
           if (file.name.toLowerCase().endsWith(".srt")) {
             mergeAss = window.danmaku.srt(fileContent);
           } else if (file.name.toLowerCase().endsWith(".ass")) {
             let assInfo = utils.extractAss(fileContent);
             mergeAss = assInfo.content;
+            mgergeOption = {
+              resolutionX: assInfo.meta.playResX,
+              resolutionY: assInfo.meta.playResY,
+              fontSize: assInfo.meta.fontSize,
+            };
           }
 
-          let options = await $this.mergeOptions();
+          let options = await $this.mergeOptions(mgergeOption);
           danmaku.layout = await window.danmaku.layout(
             danmaku.content,
             options
@@ -425,7 +443,7 @@ export default {
           });
           saveAs(blob, `${downloadFileName}.danmu.ass`);
           console.log(
-            `${epInfo.number}.${epInfo.showTitle}(${file.name}) -> ${downloadFileName}.danmu.ass已处理完成`
+            `${epInfo.number}.${epInfo.showTitle} + ${file.name} -> ${downloadFileName}.danmu.ass已处理完成`
           );
         } else {
           let options = await $this.mergeOptions();

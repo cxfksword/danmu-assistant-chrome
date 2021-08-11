@@ -46,7 +46,7 @@
             const header = [
                 '[V4+ Styles]',
                 'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-                `Style: SrtDefault,微软雅黑,36,&H00F5F5F7,&H00F5F5F7,&H001D1D1F,&H001D1D1F,0,0,0,0,100,100,0,0,1,1,1,2,5,5,5,134`,
+                `Style: SrtDefault,微软雅黑,40,&H00F5F5F7,&H00F5F5F7,&H001D1D1F,&H001D1D1F,0,0,0,0,100,100,0,0,1,1,1,2,5,5,14,134`,
                 '',
                 '[Events]',
                 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',

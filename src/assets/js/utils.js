@@ -128,42 +128,48 @@ utils.extractAss = function(content) {
         extractContent = match[0];
     }
 
-    let playResX = 560;
-    let PlayResY = 420;
+    let playResX = 0;
     match = /PlayResX\:\s*?(\d+)/.exec(content);
     if (match && match.length > 0) {
         playResX = parseInt(match[1], 10);
     }
+    let playResY = 0;
     match = /PlayResY\:\s*?(\d+)/.exec(content);
     if (match && match.length > 0) {
-        PlayResY = parseInt(match[1], 10);
+        playResY = parseInt(match[1], 10);
+    }
+    let fontSize = 0;
+    match = /Style\:.*?,.*?,(\d+?),/.exec(content);
+    if (match && match.length > 0) {
+        fontSize = parseInt(match[1], 10);
     }
 
    // let changeRes = playResX - 560;
    // let changeFontSize = changeRes > 0 ? Math.ceil(changeRes / 100) : Math.floor(changeRes / 100)
 
-    let minFontSize =  25
-    let normalFontSize = 32;
-    let maxFontSize = 36;
-    let orgFontSize = 0;
-    extractContent = extractContent.replace(/Style\:.*?,.*?,(\d+?),/gi, function(match, p1) {
-        let fontSize = normalFontSize;
-        if (orgFontSize <= 0) {
-            orgFontSize = parseInt(p1, 10);
-        } else {
-           if (parseInt(p1, 10) > orgFontSize) {
-               fontSize  = maxFontSize;
-           } else if (parseInt(p1, 10) < orgFontSize) {
-               fontSize = minFontSize;
-           }
-        }
-        return match.replace(`,${p1},`, `,${fontSize},`);
-    });
+    // let minFontSize =  25
+    // let normalFontSize = 32;
+    // let maxFontSize = 36;
+    // let orgFontSize = 0;
+    // extractContent = extractContent.replace(/Style\:.*?,.*?,(\d+?),/gi, function(match, p1) {
+    //     let fontSize = normalFontSize;
+    //     if (orgFontSize <= 0) {
+    //         orgFontSize = parseInt(p1, 10);
+    //     } else {
+    //        if (parseInt(p1, 10) > orgFontSize) {
+    //            fontSize  = maxFontSize;
+    //        } else if (parseInt(p1, 10) < orgFontSize) {
+    //            fontSize = minFontSize;
+    //        }
+    //     }
+    //     return match.replace(`,${p1},`, `,${fontSize},`);
+    // });
 
     return {
         meta: {
             playResX: playResX,
-            PlayResY: PlayResY
+            playResY: playResY,
+            fontSize: fontSize,
         },
         content : extractContent
     };
