@@ -178,8 +178,12 @@
       }
 
       let step = 5;
-      if (options.fontSize > 60) {
+      if (options.fontSize > 70) {
+        step = 15;
+      } else if (options.fontSize > 50) {
         step = 10;
+      } else if (options.fontSize < 20) {
+        step = 2;
       }
       let normalFontSize = 25;
       return Math.round((options.fontSize - normalFontSize) + line.size - step);

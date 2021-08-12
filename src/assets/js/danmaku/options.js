@@ -39,8 +39,8 @@
     };
   
     const attributes = [
-      { name: 'resolutionX', type: 'number', min: 480, predef: 720 },
-      { name: 'resolutionY', type: 'number', min: 360, predef: 540 },
+      { name: 'resolutionX', type: 'number', min: 480, predef: 560 },
+      { name: 'resolutionY', type: 'number', min: 360, predef: 420 },
       { name: 'bottomReserved', type: 'number', min: 0, predef: 60 },
       { name: 'fontFamily', type: 'string', predef: predefFontFamily(), valid: font => window.font.valid(font) },
       { name: 'fontSize', type: 'number', min: 0, predef: 0, step: 0.01 },
