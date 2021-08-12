@@ -138,32 +138,25 @@ utils.extractAss = function(content) {
     if (match && match.length > 0) {
         playResY = parseInt(match[1], 10);
     }
+    // 获取默认播放字体大小，获取不到，就拿第一个
     let fontSize = 0;
-    match = /Style\:.*?,.*?,(\d+?),/.exec(content);
-    if (match && match.length > 0) {
-        fontSize = parseInt(match[1], 10);
+    let styles = content.match(/Style\:.*?,.*?,\d+?,/g)
+    if (styles)  {
+        for (let i = 0; i < styles.length; i++) {
+            const style = styles[i];
+            match = /Style\:(.*?),.*?,(\d+?),/gi.exec(style);
+            if (match && match.length > 1) {
+                let tmpFontSize = parseInt(match[2], 10);
+                if (match[1].trim().toLowerCase() == 'default') {
+                    fontSize = tmpFontSize;
+                    break
+                }
+                if (i == 0) {
+                    fontSize = tmpFontSize;
+                }
+            }
+        }
     }
-
-   // let changeRes = playResX - 560;
-   // let changeFontSize = changeRes > 0 ? Math.ceil(changeRes / 100) : Math.floor(changeRes / 100)
-
-    // let minFontSize =  25
-    // let normalFontSize = 32;
-    // let maxFontSize = 36;
-    // let orgFontSize = 0;
-    // extractContent = extractContent.replace(/Style\:.*?,.*?,(\d+?),/gi, function(match, p1) {
-    //     let fontSize = normalFontSize;
-    //     if (orgFontSize <= 0) {
-    //         orgFontSize = parseInt(p1, 10);
-    //     } else {
-    //        if (parseInt(p1, 10) > orgFontSize) {
-    //            fontSize  = maxFontSize;
-    //        } else if (parseInt(p1, 10) < orgFontSize) {
-    //            fontSize = minFontSize;
-    //        }
-    //     }
-    //     return match.replace(`,${p1},`, `,${fontSize},`);
-    // });
 
     return {
         meta: {

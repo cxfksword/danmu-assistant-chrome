@@ -180,7 +180,7 @@
       let step = 5;
       if (options.fontSize > 70) {
         step = 15;
-      } else if (options.fontSize > 50) {
+      } else if (options.fontSize > 45) {
         step = 10;
       } else if (options.fontSize < 20) {
         step = 2;
