@@ -1,6 +1,6 @@
 {
   "name": "danmu-assistant-chrome",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,6 +10,7 @@
   "dependencies": {
     "element-plus": "1.0.2-beta.70",
     "file-saver": "^2.0.5",
+    "iconv-lite": "^0.6.3",
     "vue": "^3.0.5"
   },
   "devDependencies": {

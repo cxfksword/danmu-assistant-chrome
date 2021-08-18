@@ -34,7 +34,7 @@
     const header = info => [
       '[Script Info]',
       `; 因为生成的字幕没法知道播放视频的实际分辨率是多少，导致有时会出现字幕过小/过大的问题，可以通过修改PlayResX/PlayResY的数值，改变字幕大小。几个参考数值(越大字幕越小)：`,
-      `; 480x360, 560x420, 720x540, 960x720, 1080x810`,
+      `; 384x288, 480x360, 560x420, 720x540, 960x720, 1080x810`,
       `Title: ${info.title}`,
       `Original Script: ${info.original}`,
       'ScriptType: v4.00+',
