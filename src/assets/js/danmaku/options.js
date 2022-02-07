@@ -48,7 +48,7 @@
       { name: 'rtlDuration', type: 'number', min: 0.1, predef: 8, step: 0.1 },
       { name: 'fixDuration', type: 'number', min: 0.1, predef: 4, step: 0.1 },
       { name: 'maxDelay', type: 'number', min: 0, predef: 6, step: 0.1 },
-      { name: 'textOpacity', type: 'number', min: 10, max: 100, predef: 60 },
+      { name: 'textOpacity', type: 'number', min: 10, max: 100, predef: 80 },
       { name: 'maxOverlap', type: 'number', min: 1, max: 20, predef: 1 },
       { name: 'offset', type: 'number', min: -10000000, predef: 0},
     ];

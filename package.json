@@ -2,7 +2,7 @@
   "name": "danmu-assistant-chrome",
   "version": "0.1.6",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch",
     "build": "vite build",
     "serve": "vite preview",
     "publish": "vite build && cd dist && npx crx pack --zip-output ../release/danmu-assistant-chrome.zip && npx crx pack -o ../release/danmu-assistant-chrome.crx"

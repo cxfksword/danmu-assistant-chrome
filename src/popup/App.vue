@@ -6,6 +6,14 @@
         id="options-link"
         class="top-button"
         title="Options"
+        @click="toggleTransform()"
+      >
+        <i class="el-icon-refresh">&nbsp;</i>
+      </div>
+      <div
+        id="options-link"
+        class="top-button"
+        title="Options"
         @click="toggleSettings()"
       >
         <i class="el-icon-s-tools">&nbsp;</i>
@@ -16,14 +24,14 @@
       <div id="settings" v-show="showSettings">
         <el-form ref="settings" inline="true" label-position="right">
           <el-form-item
-            label="字体透明度,范围: 10~100. 100为全透明"
+            label="字体透明度，范围: 10~100，值越小越透明"
             class="reverse"
           >
             <el-input v-model.number="settings.textOpacity"></el-input>
           </el-form-item>
         </el-form>
       </div>
-      <el-card class="box-card">
+      <el-card class="box-card" v-show="!showTransferForm">
         <el-form ref="form" label-position="top" label-width="80px">
           <el-form-item :model="form" label="1/ 当前页面弹幕" prop="danmu">
             <el-checkbox-group v-model="form.danmu">
@@ -88,6 +96,34 @@
           </el-form-item>
         </el-form>
       </el-card>
+
+      <el-card class="box-card" v-show="showTransferForm">
+        <el-form ref="transformForm" label-position="top" label-width="80px">
+          <el-form-item label="1/ xml弹幕文件转换ass">
+            <div class="choose_ass" v-on:click="chooseDanmuXml">
+              {{ chooseDanmuXmlTips }}
+            </div>
+
+            <input
+              id="danmuXml"
+              type="file"
+              @change="selectDanmuFile"
+              v-show="false"
+              multiple
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button
+              type="primary"
+              @click="submitTransformXml()"
+              icon="el-icon-download"
+              :loading="loading"
+            >
+              生成ass文件
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
     </div>
   </div>
 </template>
@@ -105,7 +141,7 @@ export default {
       },
       showSettings: false,
       settings: {
-        textOpacity: 60,
+        textOpacity: 80,
       },
       form: {
         epList: [],
@@ -113,6 +149,9 @@ export default {
         ass: "",
         offset: "",
         rename: "",
+      },
+      transformForm: {
+        xml: "",
       },
       options: {
         font_size: "",
@@ -122,8 +161,10 @@ export default {
       },
       chooseAssDefaultTips: "点击此处选择字幕文件，支持ass/srt",
       chooseAssTips: "",
+      chooseDanmuXmlTips: "点击选择xml弹幕文件",
       pageUrl: "",
       loading: false,
+      showTransferForm: false,
     };
   },
   created() {
@@ -442,8 +483,34 @@ export default {
 
       $this.form.ass = e.target.value;
     },
+    chooseDanmuXml: function () {
+      document.querySelector("#danmuXml").click();
+    },
+    selectDanmuFile: function (e) {
+      let $this = this;
+      let file = e.target.value;
+
+      let countTips = "";
+      e.target.files.length > 1 ? ` (${e.target.files.length})` : "";
+      let endTips = "";
+      if (e.target.files.length > 1) {
+        countTips = ` (${e.target.files.length})`;
+        endTips =
+          "..." + e.target.files[e.target.files.length - 1].name.substr(-10);
+
+        $this.chooseDanmuXmlTips =
+          file.replace(/.*[\/\\]/, "").substr(0, 20) + endTips + countTips;
+      } else {
+        $this.chooseDanmuXmlTips = file.replace(/.*[\/\\]/, "");
+      }
+
+      $this.transformForm.xml = e.target.value;
+    },
     toggleSettings: function () {
       this.showSettings = !this.showSettings;
+    },
+    toggleTransform: function () {
+      this.showTransferForm = !this.showTransferForm;
     },
     getSelectedEpList: function () {
       let epList = [];
@@ -548,6 +615,41 @@ export default {
             `${epInfo.number}.${epInfo.showTitle} -> ${downloadFileName}.danmu.ass已处理完成`
           );
         }
+
+        await utils.sleep(1000);
+      }
+
+      $this.loading = false;
+    },
+    submitTransformXml: async function () {
+      let $this = this;
+      $this.loading = true;
+
+      // 保存设置
+      $this.saveSettings($this.pageUrl);
+
+      // 处理字幕
+      let options = await $this.mergeOptions();
+      let files = document.querySelector("#danmuXml").files;
+      for (let i = 0; i < files.length; i++) {
+        let file = files && files.length > i ? files[i] : null;
+        let fileContent = await $this.readFile(file);
+        const { danmaku } = window.danmaku.parser.bilibili_xml(fileContent);
+        let danmakuLayout = {
+          id: `bilibili`,
+          meta: {
+            name: file.name.replace(/\.[a-zA-Z]+$/, ""),
+            url: "",
+          },
+          layout: await window.danmaku.layout(danmaku, options),
+        };
+
+        let content = window.danmaku.ass(danmakuLayout, options);
+
+        var blob = new window.Blob([content], {
+          type: "text/plain;charset=utf-8",
+        });
+        saveAs(blob, `${danmakuLayout.meta.name}.danmu.ass`);
 
         await utils.sleep(1000);
       }
