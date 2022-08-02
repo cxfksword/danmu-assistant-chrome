@@ -13,7 +13,14 @@
 * 合并ass/srt电影字幕
 
 
-## 感谢
+## How to build
+
+```
+npm run dev
+npm run publish
+```
+
+## Thanks
 
 [ass-danmaku](https://github.com/tiansh/ass-danmaku)
 

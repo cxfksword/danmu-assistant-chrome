@@ -1,6 +1,6 @@
 {
   "name": "danmu-assistant-chrome",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",

@@ -5,15 +5,15 @@
       <div
         id="options-link"
         class="top-button"
-        title="Options"
+        title="xml弹幕转换"
         @click="toggleTransform()"
       >
-        <i class="el-icon-refresh">&nbsp;</i>
+        <i class="el-icon-menu">&nbsp;</i>
       </div>
       <div
         id="options-link"
         class="top-button"
-        title="Options"
+        title="设置"
         @click="toggleSettings()"
       >
         <i class="el-icon-s-tools">&nbsp;</i>
@@ -33,7 +33,15 @@
       </div>
       <el-card class="box-card" v-show="!showTransferForm">
         <el-form ref="form" label-position="top" label-width="80px">
-          <el-form-item :model="form" label="1/ 当前页面弹幕" prop="danmu">
+          <el-form-item :model="form" prop="danmu">
+            <template #label>
+              1/ 当前页面弹幕 (<a
+                href="javascript:;"
+                class="checkall"
+                @click="toggleCheckAll()"
+                >全选</a
+              >)
+            </template>
             <el-checkbox-group v-model="form.danmu">
               <el-checkbox
                 :label="d.cid"
@@ -91,7 +99,15 @@
               icon="el-icon-download"
               :loading="loading"
             >
-              下载/合并弹幕
+              下载/合并ASS弹幕
+            </el-button>
+            <el-button
+              @click="submitDownloadXml()"
+              size="small"
+              icon="el-icon-download"
+              :loading="loading"
+            >
+              下载XML弹幕
             </el-button>
           </el-form-item>
         </el-form>
@@ -340,6 +356,23 @@ export default {
                 url: url,
               },
               content: danmaku,
+            });
+          },
+          error: function (e) {
+            reject(e);
+          },
+        });
+      });
+    },
+    fetchDanmuXmlContent: function (cid) {
+      let $this = this;
+
+      return new Promise((resolve, reject) => {
+        let url = "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid;
+        utils.ajax(url, {
+          success: function (res) {
+            resolve({
+              content: res.responseText,
             });
           },
           error: function (e) {
@@ -656,6 +689,57 @@ export default {
 
       $this.loading = false;
     },
+    submitDownloadXml: async function () {
+      let $this = this;
+      $this.loading = true;
+
+      // 处理字幕
+      let epList = $this.getSelectedEpList();
+      for (let i = 0; i < epList.length; i++) {
+        let epInfo = epList[i];
+        let downloadFileName = $this.getDownloadName(epInfo);
+        let danmaku = await $this.fetchDanmuXmlContent(epInfo.cid);
+        let content = $this.formatXML(danmaku.content);
+        var blob = new window.Blob([content], {
+          type: "text/plain;charset=utf-8",
+        });
+        saveAs(blob, `${downloadFileName}.xml`);
+        console.log(
+          `${epInfo.number}.${epInfo.showTitle} -> ${downloadFileName}.xml已处理完成`
+        );
+
+        await utils.sleep(1000);
+      }
+
+      $this.loading = false;
+    },
+    formatXML: function (xml, tab = "\t", nl = "\n") {
+      let formatted = "",
+        indent = "";
+      const nodes = xml.slice(1, -1).split(/>\s*</);
+      if (nodes[0][0] == "?") formatted += "<" + nodes.shift() + ">" + nl;
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node[0] == "/") indent = indent.slice(tab.length); // decrease indent
+        formatted += indent + "<" + node + ">" + nl;
+        if (
+          node[0] != "/" &&
+          node[node.length - 1] != "/" &&
+          node.indexOf("</") == -1
+        )
+          indent += tab; // increase indent
+      }
+      return formatted;
+    },
+    toggleCheckAll: function () {
+      let $this = this;
+      for (let i = 0; i < $this.form.epList.length; i++) {
+        const epInfo = $this.form.epList[i];
+        if ($this.form.danmu.indexOf(epInfo.cid) == -1) {
+          $this.form.danmu.push(epInfo.cid);
+        }
+      }
+    },
   },
 };
 </script>
@@ -809,5 +893,16 @@ label {
 
 .el-button--primary {
   margin-top: 10px;
+}
+
+a.checkall:link,
+a.checkall:visited {
+  font-size: 12px;
+  color: #222;
+  text-decoration: none;
+}
+a.checkall:hover {
+  font-size: 12px;
+  text-decoration: underline;
 }
 </style>
