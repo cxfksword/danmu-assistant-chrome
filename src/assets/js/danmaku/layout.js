@@ -171,30 +171,54 @@
       };
     };
 
+     // 计算弹幕中使用最多的字体大小，用于设置默认字体大小
+     const getCommonFontSize = list => {
+      const count = new Map();
+      let commonCount = 0, common = 1;
+      list.forEach(({ size }) => {
+        let value = 1;
+        if (count.has(size)) value = count.get(size) + 1;
+        count.set(size, value);
+        if (value > commonCount) {
+          commonCount = value;
+          common = size;
+        }
+      });
+      return common;
+    };
 
-    const calFontSize = (line, options) => {
+    const calFontSize = (line, options, commonFontSize) => {
       if (options.fontSize <= 1) {
+        // 默认没配置时，直接使用xml字幕原始大小
         return line.size;
+      } else {
+        // 如何配置了默认字体大小，就计算出相对于配置大小的缩放比例
+        if (line.size == commonFontSize) {
+          return options.fontSize;
+        } else {
+          return parseInt(options.fontSize * (line.size / commonFontSize));
+        }
       }
 
-      let step = 5;
-      if (options.fontSize > 70) {
-        step = 15;
-      } else if (options.fontSize > 45) {
-        step = 10;
-      } else if (options.fontSize < 20) {
-        step = 2;
-      }
-      let normalFontSize = 25;
-      return Math.round((options.fontSize - normalFontSize) + line.size - step);
+      // let step = 5;
+      // if (options.fontSize > 70) {
+      //   step = 15;
+      // } else if (options.fontSize > 45) {
+      //   step = 10;
+      // } else if (options.fontSize < 20) {
+      //   step = 2;
+      // }
+      // let normalFontSize = 25;
+      // return Math.round((options.fontSize - normalFontSize) + line.size - step);
     }
 
-    const placeDanmaku = function (options) {
+    const placeDanmaku = function (options, commonFontSize) {
       const layers = options.maxOverlap;
       const normal = Array(layers).fill(null).map(x => rtlCanvas(options));
       const fixed = Array(layers).fill(null).map(x => fixedCanvas(options));
       return function (line) {
-        line.fontSize = calFontSize(line, options);
+        // 这里fontSize只用于计算高度间隔，避免重叠，不是为了显示字体大小
+        line.fontSize = calFontSize(line, options, commonFontSize);
         line.height = line.fontSize;
         line.width = line.width || window.font.text(options.fontFamily, line.text, line.fontSize) || 1;
 
@@ -239,7 +263,8 @@
     const main = async function (danmaku, optionGetter) {
       const options = JSON.parse(JSON.stringify(optionGetter));
       const sorted = danmaku.slice(0).sort(({ time: x }, { time: y }) => x - y);
-      const place = placeDanmaku(options);
+      const commonFontSize = getCommonFontSize(sorted);
+      const place = placeDanmaku(options, commonFontSize);
       const result = Array(sorted.length);
       let length = 0;
       for (let i = 0, l = sorted.length; i < l; i++) {

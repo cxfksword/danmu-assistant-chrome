@@ -24,10 +24,25 @@
       <div id="settings" v-show="showSettings">
         <el-form ref="settings" inline="true" label-position="right">
           <el-form-item
+            label="字体大小，0指默认，建设范围: 25~60"
+            class="reverse"
+          >
+            <el-input v-model.number="settings.fontSize"></el-input>
+          </el-form-item>
+          <el-form-item
             label="字体透明度，范围: 10~100，值越小越透明"
             class="reverse"
           >
             <el-input v-model.number="settings.textOpacity"></el-input>
+          </el-form-item>
+          <el-form-item
+            label="滑动弹幕时长(秒)，增大同屏字幕会变多"
+            class="reverse"
+          >
+            <el-input v-model.number="settings.rtlDuration"></el-input>
+          </el-form-item>
+          <el-form-item label="固定弹幕时长(秒)" class="reverse">
+            <el-input v-model.number="settings.fixDuration"></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -158,6 +173,9 @@ export default {
       showSettings: false,
       settings: {
         textOpacity: 80,
+        rtlDuration: 8,
+        fixDuration: 4,
+        fontSize: 0,
       },
       form: {
         epList: [],
@@ -202,8 +220,17 @@ export default {
       let $this = this;
 
       utils.getOptions("settings", function (settings) {
+        if (settings && settings.fontSize) {
+          $this.settings.fontSize = settings.fontSize;
+        }
         if (settings && settings.textOpacity) {
           $this.settings.textOpacity = settings.textOpacity;
+        }
+        if (settings && settings.rtlDuration) {
+          $this.settings.rtlDuration = settings.rtlDuration;
+        }
+        if (settings && settings.fixDuration) {
+          $this.settings.fixDuration = settings.fixDuration;
         }
       });
 
@@ -218,6 +245,20 @@ export default {
     },
     saveSettings: function (url) {
       let $this = this;
+
+      if (
+        !$this.settings.textOpacity ||
+        $this.settings.textOpacity <= 0 ||
+        $this.settings.textOpacity > 100
+      ) {
+        $this.settings.textOpacity = 80;
+      }
+      if (!$this.settings.rtlDuration || $this.settings.rtlDuration <= 0) {
+        $this.settings.rtlDuration = 8;
+      }
+      if (!$this.settings.fixDuration || $this.settings.fixDuration <= 0) {
+        $this.settings.fixDuration = 4;
+      }
 
       utils.setOptions("settings", $this.settings);
 
@@ -296,12 +337,12 @@ export default {
               }
             }
 
-            let epInfo = new RegExp(/"epInfo":(\{.+?\}),"sections"/).exec(
+            let match = new RegExp(/"epInfo":.+?,"cid":(\d+?),/).exec(
               res.responseText
             );
-            if (!!epInfo && epInfo.length) {
-              let epJson = JSON.parse(epInfo[1]);
-              $this.form.danmu.push(epJson.cid);
+            if (!!match && match.length) {
+              let cid = parseInt(match[1]);
+              $this.form.danmu.push(cid);
             }
 
             $this.media.title = $this.parseTitle(res.responseText);

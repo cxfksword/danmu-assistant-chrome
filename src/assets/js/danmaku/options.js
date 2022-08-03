@@ -43,7 +43,7 @@
       { name: 'resolutionY', type: 'number', min: 360, predef: 420 },
       { name: 'bottomReserved', type: 'number', min: 0, predef: 60 },
       { name: 'fontFamily', type: 'string', predef: predefFontFamily(), valid: font => window.font.valid(font) },
-      { name: 'fontSize', type: 'number', min: 0, predef: 0, step: 0.01 },
+      { name: 'fontSize', type: 'number', min: 0, predef: 0, step: 1 },
       { name: 'textSpace', type: 'number', min: 0, predef: 0 },
       { name: 'rtlDuration', type: 'number', min: 0.1, predef: 8, step: 0.1 },
       { name: 'fixDuration', type: 'number', min: 0.1, predef: 4, step: 0.1 },
