@@ -17,7 +17,9 @@
 ## How to build
 
 ```
+npm install
 npm run dev
+
 npm run publish
 ```
 

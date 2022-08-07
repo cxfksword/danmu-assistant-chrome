@@ -306,6 +306,10 @@ export default {
                       videoJson.data.pages.length > 1
                         ? `P${i + 1} ${title}`
                         : title,
+                    epTitle:
+                      videoJson.data.pages.length > 1
+                        ? `P${i + 1} ${title}`
+                        : title,
                   });
                 }
                 $this.form.danmu.push($this.form.epList[p - 1].cid);
@@ -333,6 +337,9 @@ export default {
                   cid: epJson.cid,
                   title: epJson.title,
                   showTitle: epJson.titleFormat,
+                  epTitle:
+                    epJson.titleFormat +
+                    (epJson.longTitle ? " " + epJson.longTitle.trim() : ""),
                 });
               }
             }
@@ -367,6 +374,9 @@ export default {
                   cid: epJson.cid,
                   title: epJson.title,
                   showTitle: epJson.titleFormat,
+                  epTitle:
+                    epJson.titleFormat +
+                    (epJson.longTitle ? " " + epJson.longTitle.trim() : ""),
                 });
                 if (i == 0) {
                   $this.form.danmu.push(epJson.cid);
@@ -604,7 +614,7 @@ export default {
       return name
         .replace(/{title}/gi, $this.media.title)
         .replace(/{video_title}/gi, $this.media.title)
-        .replace(/{ep_title}/gi, epInfo.showTitle)
+        .replace(/{ep_title}/gi, epInfo.epTitle)
         .replace(/{idx}/gi, epInfo.idx)
         .replace(/{-idx}/gi, epInfo.idx - 1)
         .replace(/{--idx}/gi, epInfo.idx - 2)
