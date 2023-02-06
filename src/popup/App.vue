@@ -287,33 +287,70 @@ export default {
       //普通视频
       if (/\/video\/BV.*/.test(url)) {
         let p = utils.getUrlParameter("p", url) || 1;
-        let bvid = /\/video\/(BV.*)/.exec(utils.removeQuerystring(url))[1];
+        let bvid = /\/video\/(BV\w+)/.exec(utils.removeQuerystring(url))[1];
         utils.ajax(
           `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`,
           {
             success: function (res) {
               let videoJson = JSON.parse(res.responseText);
               if (videoJson && videoJson.data) {
-                for (let i = 0; i < videoJson.data.pages.length; i++) {
-                  const el = videoJson.data.pages[i];
-                  const title = el.part || videoJson.data.tname;
-                  $this.form.epList.push({
-                    idx: i + 1,
-                    number: utils.paddingZero(i + 1),
-                    cid: el.cid,
-                    title: title,
-                    showTitle:
-                      videoJson.data.pages.length > 1
-                        ? `P${i + 1} ${title}`
-                        : title,
-                    epTitle:
-                      videoJson.data.pages.length > 1
-                        ? `P${i + 1} ${title}`
-                        : title,
-                  });
+                if (
+                  videoJson.data.ugc_season &&
+                  videoJson.data.ugc_season.sections &&
+                  videoJson.data.ugc_season.sections.length > 0
+                ) {
+                  // 合集
+                  for (
+                    let i = 0;
+                    i < videoJson.data.ugc_season.sections[0].episodes.length;
+                    i++
+                  ) {
+                    const el =
+                      videoJson.data.ugc_season.sections[0].episodes[i];
+                    const title = el.title || el.page.part;
+                    if (el.bvid == bvid) {
+                      p = i + 1;
+                    }
+                    $this.form.epList.push({
+                      idx: i + 1,
+                      number: utils.paddingZero(i + 1),
+                      cid: el.cid,
+                      title: title,
+                      showTitle:
+                        videoJson.data.pages.length > 1
+                          ? `P${i + 1} ${title}`
+                          : title,
+                      epTitle:
+                        videoJson.data.pages.length > 1
+                          ? `P${i + 1} ${title}`
+                          : title,
+                    });
+                  }
+                  $this.form.danmu.push($this.form.epList[p - 1].cid);
+                  $this.media.title = videoJson.data.ugc_season.title;
+                } else {
+                  // 分P
+                  for (let i = 0; i < videoJson.data.pages.length; i++) {
+                    const el = videoJson.data.pages[i];
+                    const title = el.part || videoJson.data.tname;
+                    $this.form.epList.push({
+                      idx: i + 1,
+                      number: utils.paddingZero(i + 1),
+                      cid: el.cid,
+                      title: title,
+                      showTitle:
+                        videoJson.data.pages.length > 1
+                          ? `P${i + 1} ${title}`
+                          : title,
+                      epTitle:
+                        videoJson.data.pages.length > 1
+                          ? `P${i + 1} ${title}`
+                          : title,
+                    });
+                  }
+                  $this.form.danmu.push($this.form.epList[p - 1].cid);
+                  $this.media.title = videoJson.data.title;
                 }
-                $this.form.danmu.push($this.form.epList[p - 1].cid);
-                $this.media.title = videoJson.data.title;
               }
             },
           }
